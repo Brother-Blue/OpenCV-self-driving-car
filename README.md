@@ -23,18 +23,18 @@
 - To be added
 
 ## Commit Structure
-Imperative subject line (max 50 chars)
---blank line--
-Commit body. (max line length 72 chars)
-What changed.
-Why was it changed.
+Imperative subject line (max 50 chars)<br>
+<br>
+Commit body. (max line length 72 chars)<br>
+What changed.<br>
+Why was it changed.<br>
 
 Example:
-<code>
+```
 Update a faulty library
 
 Updated library A to library B.
 Library A contained a method that would immediately raise an exception
 regardless of its implementation. Library B is an updated version of
 library A which fixes this issue.
-</code>
+```
