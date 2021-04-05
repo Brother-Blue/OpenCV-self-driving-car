@@ -13,14 +13,45 @@
     - Open a new terminal and navigate to the directory
     - Clone the project's contents with: git clone link_from_above
 
+3.  sudo apt-get update
+    sudo apt-get install \ 
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo \
+    "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+4. run the docker image     IN THE CORRECT REPO
+    docker run --rm -ti -v $PWD:/opt/sources ubuntu:18.04 /bin/bash
+    docker run --rm <your_id>/container_name
+
 ## Our way of working
 
 ### Adding features
-- To be added
+- Discuss and Define new feature
+- Create appropriate requirements
+- Add requirements to Kanban board
+- Implement feature that satisfies the requirements
+- Run extensive testing
 ### Updating features
-- To be added
-### Maintaining features
-- To be added
+- Discuss feature changes
+- Create and/or update appropriate requirements 
+- Add/update requirements to Kanban board 
+- Implement feature that satisfies the requirements 
+- Run extensive testing
+### Maintaining features 
+- Discover bug(s) from unit testing 
+- Create issues       
+- Add issues as items on Kanban board                   
+- Implement changes 
+- Run extensive testing 
+- Repeat cycle if needed
 
 ## Commit Structure
 Imperative subject line (max 50 chars)<br>
