@@ -39,6 +39,7 @@ build-and-test:
     - docker-build
   stage: build
   script:
+    - cd primeChecker
     - docker build -f Dockerfile .
 
 # This section describes what shall be done to deploy artefacts from the project.
@@ -47,5 +48,6 @@ release:
     - docker-build
   stage: deploy
   script:
+    - cd primeChecker
     - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
     - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
