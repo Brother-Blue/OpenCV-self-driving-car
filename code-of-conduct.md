@@ -10,6 +10,7 @@ We will be conducting code reviews along with weekly meetings where we discuss a
 ## What is our usual communication plan?
 Text communication will be through a dedicated channel selected by the group.
 Our main communication will be using remote communication tools, meeting at a minimum of three (3) times per week.
+The meetings will be held on Monday, Wednesday and Friday in the mornings (or after lectures if they are both on the same day).
 
 ## How will we solve conflicts?
-All pertainable members will participate in a call, each member then expresses their feelings and concerns about the issue. After they are finished the other member who repeats this same process. Afterwards they together discuss a solution to the conflict. The entire process is mediated by a third-party if necessary.
+All pertainable members will participate in a call, each member then expresses their feelings and concerns about the issue. After they are finished the other member who repeats this same process. Afterwards they together discuss a solution to the conflict. Should they not come to an accord the issue will be elevated to the team where an agreement will be made. To prevent further escalataion of conflict the team members involved shall inform the rest of the team about the issue(s).
