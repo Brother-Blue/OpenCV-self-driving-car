@@ -44,6 +44,8 @@ build-and-test:
 
 # This section describes what shall be done to deploy artefacts from the project.
 release:
+  only:
+    - tags
   tags:
     - docker-build
   stage: deploy
