@@ -46,6 +46,7 @@ build-and-test:
 release:
   only:
     - tags
+    - /^v_[0-9]+(?:.[0-9]+)+$/
   tags:
     - docker-build
   stage: deploy
