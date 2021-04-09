@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Which Docker image shall be used on the GitLab runner?
-image: docker:19.03.3
+image: registry.git.chalmers.se/courses/dit638/students/docker/docker:19.03.3
 
 # Details about how to connect to the Docker service to run this build.
 variables:
@@ -22,7 +22,8 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 services:
-  - name: docker:19.03.3-dind
+  - name: registry.git.chalmers.se/courses/dit638/students/docker/docker:19.03.3-dind
+    alias: docker
 
 stages:
   - build
