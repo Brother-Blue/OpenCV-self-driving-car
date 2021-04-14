@@ -42,7 +42,9 @@ build-and-test:
   script:
     - cd primeChecker
     - docker build -f Dockerfile .
-    - docker ps
+    - docker create -ti --name dummy Dockerfile bash
+    - docker cp Dockerfile:/opt/coverage.xml /primechecker
+    - docker rm -f dummy
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
