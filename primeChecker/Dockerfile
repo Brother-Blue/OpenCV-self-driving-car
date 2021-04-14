@@ -24,5 +24,5 @@ RUN cd /opt/sources && \
 FROM scratch
 
 WORKDIR /opt
-COPY --from=builder /tmp/helloworld /tmp/coverage.xml .
+COPY --from=builder /tmp/helloworld /tmp/coverage.xml ./
 ENTRYPOINT ["/opt/helloworld"]
