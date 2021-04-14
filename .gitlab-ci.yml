@@ -42,12 +42,13 @@ build-and-test:
   script:
     - cd primeChecker
     - docker build -f Dockerfile .
+    - docker run -d -v primechecker:opt
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
     expire_in: 2 days
     reports:
-      cobertura: opt/coverage.xml
+      cobertura: primechecker/coverage.xml
 
 # This section describes what shall be done to deploy artefacts from the project.
 release:
