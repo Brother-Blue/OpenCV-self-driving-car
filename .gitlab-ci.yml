@@ -42,6 +42,7 @@ build-and-test:
   script:
     - cd primeChecker
     - docker build -f Dockerfile .
+    - g++ --coverage -fprofile-arcs -ftest-coverage helloworld.cpp -o helloworld
 
 # This section describes what shall be done to deploy artefacts from the project.
 release:
