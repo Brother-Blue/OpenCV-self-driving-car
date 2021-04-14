@@ -25,4 +25,5 @@ FROM scratch
 
 WORKDIR /opt
 COPY --from=builder /tmp/helloworld /tmp/coverage.xml ./
+RUN ls
 ENTRYPOINT ["/opt/helloworld"]
