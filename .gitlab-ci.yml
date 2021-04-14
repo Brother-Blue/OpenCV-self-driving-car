@@ -71,7 +71,7 @@ coverage-report:
     - cmake ..
     - make
     - make test
-    - gcovr -r ../ -f "../PrimeChecker.cpp" -f "../helloworld.cpp" --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml
+    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
     - ls
     - cd
     - ls
@@ -80,4 +80,4 @@ coverage-report:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
     expire_in: 2 days
     reports:
-      cobertura: primechecker/build/coverage.xml
+      cobertura: coverage.xml
