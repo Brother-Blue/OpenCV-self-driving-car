@@ -75,7 +75,7 @@ coverage-report:
     - cd ..
     - ls
     - cd
-    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml
+    - gcovr -r ../ -f "../PrimeChecker.cpp" -f "../helloworld.cpp" --xml-pretty --exclude-unreachable-branches --print-summary
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
