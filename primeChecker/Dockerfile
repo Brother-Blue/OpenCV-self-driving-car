@@ -17,7 +17,7 @@ RUN cd /opt/sources && \
     mkdir build && \
     cd build && \
     cmake -D CMAKE_BUILD_TYPE=Release .. && \
-    make && make test && gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml && cp helloworld coverage.xml /tmp
+    make && make test && gcovr -r ../ --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml && cp helloworld coverage.xml /tmp
 
 # Section 2: Bundle the application
 # Changed the image from Ubuntu to Scratch
