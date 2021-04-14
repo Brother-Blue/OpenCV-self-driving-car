@@ -24,5 +24,5 @@ RUN cd /opt/sources && \
 FROM scratch
 
 WORKDIR /opt
-COPY --from=builder/tmp/ ./
+COPY --from=builder /tmp ./
 ENTRYPOINT ["/opt/helloworld"]
