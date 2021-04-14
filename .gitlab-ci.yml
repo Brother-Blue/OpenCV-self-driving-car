@@ -27,29 +27,20 @@ services:
 
 stages:
   - build
-  - test
   - deploy
 
 # Display information before we start the build.
 before_script:
   - docker info
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  
+
 # This section describes what shall be done to build and test the project.
 build-and-test:
   tags:
     - docker-build
   stage: build
-  before_script:
-    - sudo apt-get -qq update && apt-get -qq install -y make autoconf gcc g++ gcovr ggcov lcov
   script:
     - cd primeChecker
-    - g++ -Wall --coverage -fprofile-arcs -ftest-coverage helloworld.cpp PrimeChecker.cpp
-    - ls
-    - gcov helloworld.cpp
-    - lcov --directory . --capture --output-file coverage.info
-    - lcov --list coverage.info
-
     - docker build -f Dockerfile .
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
@@ -58,9 +49,8 @@ build-and-test:
     reports:
       cobertura: coverage.xml
 
-
 # This section describes what shall be done to deploy artefacts from the project.
-deploy:
+release:
   rules:
     # Regex rule from https://gist.github.com/jhorsman/62eeea161a13b80e39f5249281e17c39
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/'
