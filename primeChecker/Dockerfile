@@ -25,4 +25,4 @@ FROM scratch
 
 WORKDIR /opt
 COPY --from=builder /tmp ./
-#ENTRYPOINT ["/opt/helloworld"]
+ENTRYPOINT ["/opt/helloworld"]
