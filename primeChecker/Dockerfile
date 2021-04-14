@@ -7,7 +7,8 @@ RUN apt-get update -y && \
     apt-get dist-upgrade -y && \
     apt-get install -y --no-install-recommends \
         cmake \
-        build-essential
+        build-essential \
+        g++
 
 ADD . /opt/sources
 WORKDIR /opt/sources
