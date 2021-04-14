@@ -27,6 +27,7 @@ services:
 
 stages:
   - build
+  - test
   - deploy
 
 # Display information before we start the build.
@@ -44,10 +45,13 @@ build-and-test:
   script:
     - cd primeChecker
     - docker build -f Dockerfile .
-    - g++ --coverage -fprofile-arcs -ftest-coverage helloworld.cpp -o helloworld
+
+test:
+  stage: test
+  script: echo run tests
 
 # This section describes what shall be done to deploy artefacts from the project.
-release:
+deploy:
   rules:
     # Regex rule from https://gist.github.com/jhorsman/62eeea161a13b80e39f5249281e17c39
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/'
