@@ -78,5 +78,3 @@ coverage-report:
     expire_in: 2 days
     reports:
       cobertura: primeChecker/build/coverage.xml
-  only:
-    - merge_requests
