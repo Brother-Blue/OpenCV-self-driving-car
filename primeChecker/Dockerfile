@@ -17,12 +17,12 @@ RUN cd /opt/sources && \
     mkdir build && \
     cd build && \
     cmake -D CMAKE_BUILD_TYPE=Release .. && \
-    make && make test && cp helloworld /tmp
+    make && make test && - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml && cp helloworld coverage /tmp
 
 # Section 2: Bundle the application
 # Changed the image from Ubuntu to Scratch
 FROM scratch
 
 WORKDIR /opt
-COPY --from=builder /tmp/helloworld .
+COPY --from=builder /tmp/helloworld coverage.xml .
 ENTRYPOINT ["/opt/helloworld"]
