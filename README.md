@@ -1,4 +1,4 @@
-# 2021-group-01 [![pipeline status](https://git.chalmers.se/courses/dit638/students/2021-group-01/badges/master/pipeline.svg)](https://git.chalmers.se/courses/dit638/students/2021-group-01/-/commits/master) ![coverage](https://gitlab.com/gitlab-org/gitlab/badges/master/coverage.svg?job=coverage)
+# 2021-group-01 [![pipeline status](https://git.chalmers.se/courses/dit638/students/2021-group-01/badges/master/pipeline.svg)](https://git.chalmers.se/courses/dit638/students/2021-group-01/-/commits/master) [![coverage report](https://git.chalmers.se/courses/dit638/students/2021-group-01/badges/master/coverage.svg)](https://git.chalmers.se/courses/dit638/students/2021-group-01/-/commits/master)
 
 ## Getting started
 1. Set up your GitLab account's [SSH key](https://git.chalmers.se/profile/keys) if you already have a SSH key, skip to #2.
