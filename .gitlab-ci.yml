@@ -41,7 +41,7 @@ build-and-test:
     - docker-build
   stage: build
   before_script:
-    - apt-get -qq update && apt-get -qq install -y make autoconf gcc g++ gcovr ggcov lcov
+    - sudo apt-get -qq update && apt-get -qq install -y make autoconf gcc g++ gcovr ggcov lcov
   script:
     - cd primeChecker
     - g++ -Wall --coverage -fprofile-arcs -ftest-coverage helloworld.cpp PrimeChecker.cpp
