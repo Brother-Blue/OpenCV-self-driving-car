@@ -71,7 +71,10 @@ coverage-report:
     - cmake ..
     - make
     - make test
+    - ls
     - cd ..
+    - ls
+    - cd
     - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
