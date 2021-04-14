@@ -41,7 +41,7 @@ build-and-test:
     - docker-build
   stage: build
   before_script:
-    - apt-get update && apt-get install -y g++
+    - apt-get update && apt-get install -y g++ gcovr
   script:
     - cd primeChecker
     - docker build -f Dockerfile .
