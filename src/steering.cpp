@@ -30,7 +30,6 @@ cv::Scalar yellowHigh = cv::Scalar(35, 175, 216);
 cv::Scalar blueLow = cv::Scalar(109, 96, 27);
 cv::Scalar blueHigh = cv::Scalar(120, 189, 86);
 
-
 int32_t main(int32_t argc, char **argv) {
     int32_t retCode{1};
     // Parse the command line parameters as we require the user to specify some mandatory information on startup.
@@ -78,7 +77,7 @@ int32_t main(int32_t argc, char **argv) {
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning()) {
                 // OpenCV data structure to hold an image.
-                cv::Mat img;
+                cv::Mat img, frameHSV;
 
                 // Wait for a notification of a new frame.
                 sharedMemory->wait();
@@ -93,6 +92,12 @@ int32_t main(int32_t argc, char **argv) {
                 // TODO: Here, you can add some code to check the sampleTimePoint when the current frame was captured.
                 sharedMemory->unlock();
 
+                // Blur the input stream
+                cv::blur(img, imgBlur, cv::Size(3, 3));
+
+                // Convert BGR -> HSV
+                cv::cvtColor(imgBlur, imgHSV, cv::COLOR_BGR2HSV);
+
                 // TODO: Do something with the frame.
                 // Example: Draw a red rectangle and display image.
                 cv::rectangle(img, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
@@ -106,6 +111,7 @@ int32_t main(int32_t argc, char **argv) {
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
+                    cv::imshow("HSV - Debug", frameHSV);
                     cv::waitKey(1);
                 }
             }
