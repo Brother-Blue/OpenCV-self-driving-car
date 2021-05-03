@@ -74,6 +74,13 @@ int32_t main(int32_t argc, char **argv) {
 
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(), onGroundSteeringRequest);
 
+            // Crop zone for feed
+            cv::Rect roi(
+                0,          // x pos
+                HEIGHT/2,   // y pos
+                WIDTH-1,    // rect width
+                (HEIGHT / 5)); // rect height
+
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning()) {
                 // OpenCV data structure to hold an image.
@@ -97,6 +104,9 @@ int32_t main(int32_t argc, char **argv) {
 
                 // Convert BGR -> HSV
                 cv::cvtColor(imgBlur, frameHSV, cv::COLOR_BGR2HSV);
+
+                // Cropped image frame
+                imgCrop = imgDebugHSV(roi);
 
                 // TODO: Do something with the frame.
                 // Example: Draw a red rectangle and display image.
