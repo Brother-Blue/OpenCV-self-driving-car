@@ -84,7 +84,7 @@ int32_t main(int32_t argc, char **argv) {
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning()) {
                 // OpenCV data structure to hold an image.
-                cv::Mat img, imgBlur, frameHSV;
+                cv::Mat img, imgBlur, frameHSV, frameCropped;
 
                 // Wait for a notification of a new frame.
                 sharedMemory->wait();
@@ -102,11 +102,15 @@ int32_t main(int32_t argc, char **argv) {
                 // Blur the input stream
                 cv::blur(img, imgBlur, cv::Size(3, 3));
 
+                // Apply HSV filter
+                cv::inRange(imgHSV, yellowLow, yellowHigh, imgDebugHSV);
+                cv::inRange(imgHSV, blueLow, blueHigh, imgDebugHSV);
+
                 // Convert BGR -> HSV
                 cv::cvtColor(imgBlur, frameHSV, cv::COLOR_BGR2HSV);
 
                 // Cropped image frame
-                imgCrop = imgDebugHSV(roi);
+                frameCropped = frameHSV(roi);
 
                 // TODO: Do something with the frame.
                 // Example: Draw a red rectangle and display image.
@@ -122,6 +126,7 @@ int32_t main(int32_t argc, char **argv) {
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                     cv::imshow("HSV - Debug", frameHSV);
+                    cv::imshow("Cropped - Debug", frameCropped);
                     cv::waitKey(1);
                 }
             }
