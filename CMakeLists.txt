@@ -93,8 +93,9 @@ set(LIBRARIES ${LIBRARIES} ${OpenCV_LIBS})
 
 ################################################################################
 # Create executable.
+add_compile_options("--coverage")
 add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp)
-target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES} gcov)
 
 # Add dependency to OpenDLV Standard Message Set.
 add_custom_target(generate_opendlv_standard_message_set_hpp DEPENDS ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.hpp)
