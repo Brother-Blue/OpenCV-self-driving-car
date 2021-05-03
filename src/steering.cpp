@@ -24,6 +24,13 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+// HSV bounds for blue and yellow cones
+cv::Scalar yellowLow = cv::Scalar(17, 89, 128);
+cv::Scalar yellowHigh = cv::Scalar(35, 175, 216);
+cv::Scalar blueLow = cv::Scalar(109, 96, 27);
+cv::Scalar blueHigh = cv::Scalar(120, 189, 86);
+
+
 int32_t main(int32_t argc, char **argv) {
     int32_t retCode{1};
     // Parse the command line parameters as we require the user to specify some mandatory information on startup.
