@@ -41,7 +41,6 @@ build-and-test:
     - docker-build
   stage: build
   script:
-    - cd primeChecker
     - docker build -f Dockerfile .
   except:
     - tags
@@ -55,32 +54,30 @@ release:
     - docker-build
   stage: deploy
   script:
-    - cd primeChecker
     - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
     - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
 
 # This section describes what shall be done to generate code test coverage. (runs only when on master & merge requests)
-coverage-report:
-  image: gcc
-  tags:
-    - docker-build
-  stage: coverage
-  before_script:
-    - apt-get update -y && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get install -y --no-install-recommends cmake build-essential gcovr
-  script:
-    - cd primeChecker
-    - mkdir build
-    - cd build
-    - cmake ..
-    - make
-    - make test
-    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
-  coverage: /^\s*lines:\s*\d+.\d+\%/
-  artifacts:
-    name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
-    expire_in: 2 days
-    reports:
-      cobertura: primeChecker/build/coverage.xml
-  only:
-    - master
-    - merge_requests
+#coverage-report:
+#  image: gcc
+#  tags:
+#    - docker-build
+#  stage: coverage
+#  before_script:
+#    - apt-get update -y && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get install -y --no-install-recommends cmake build-essential gcovr
+#  script:
+#    - mkdir build
+#    - cd build
+#    - cmake ..
+#    - make
+#    - make test
+#    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
+#  coverage: /^\s*lines:\s*\d+.\d+\%/
+#  artifacts:
+#    name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
+#    expire_in: 2 days
+#    reports:
+#      cobertura: build/coverage.xml
+#  only:
+#    - master
+#    - merge_requests
