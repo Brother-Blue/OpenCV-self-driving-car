@@ -15,7 +15,7 @@
 
 cmake_minimum_required(VERSION 3.2)
 
-project(template-opencv)
+project(steering)
 
 ################################################################################
 # Defining the relevant versions of OpenDLV Standard Message Set and libcluon.
