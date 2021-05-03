@@ -77,7 +77,7 @@ int32_t main(int32_t argc, char **argv) {
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning()) {
                 // OpenCV data structure to hold an image.
-                cv::Mat img, frameHSV;
+                cv::Mat img, imgBlur, frameHSV;
 
                 // Wait for a notification of a new frame.
                 sharedMemory->wait();
@@ -96,7 +96,7 @@ int32_t main(int32_t argc, char **argv) {
                 cv::blur(img, imgBlur, cv::Size(3, 3));
 
                 // Convert BGR -> HSV
-                cv::cvtColor(imgBlur, imgHSV, cv::COLOR_BGR2HSV);
+                cv::cvtColor(imgBlur, frameHSV, cv::COLOR_BGR2HSV);
 
                 // TODO: Do something with the frame.
                 // Example: Draw a red rectangle and display image.
