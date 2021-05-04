@@ -34,6 +34,22 @@ cv::Scalar yellowHigh = cv::Scalar(35, 175, 216);
 cv::Scalar blueLow = cv::Scalar(109, 96, 27);
 cv::Scalar blueHigh = cv::Scalar(120, 189, 86);
 
+// Vector of vectors to store points of the 'cones' in HSV filter img.
+std::vector<std::vector<cv::Point>> contours;
+
+// Method to get contours of the potential cones
+void getCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color) {
+    cv::findContours(detectImage, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
+    for( size_t i = 0; i< contours.size(); i++ ) {
+        cv::Rect bBox = cv::boundingRect(contours[i]);
+        // if (bBox.area() > 100 && (bBox.width < 20 || bBox.height < 20)) {
+        //     cv::rectangle(hugo, bBox.tl(), bBox.br(), color, 2);
+        // }
+        cv::rectangle(drawImage, bBox.tl(), bBox.br(), color, 3);
+    }
+
+}
+
 int32_t main(int32_t argc, char **argv)
 {
     int32_t retCode{1};
@@ -95,7 +111,7 @@ int32_t main(int32_t argc, char **argv)
                 (HEIGHT / 5)); // rect height
 
             // OpenCV data structure to hold an image.
-            cv::Mat img, imgBlur, imgHSV, frameHSV, frameCropped;
+            cv::Mat img, imgFrame, imgBlur, imgHSV, frameHSV, frameCropped, imgTest;
 
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning())
@@ -111,6 +127,8 @@ int32_t main(int32_t argc, char **argv)
                 {
                     // Copy the pixels from the shared memory into our own data structure.
                     cv::Mat wrapped(HEIGHT, WIDTH, CV_8UC4, sharedMemory->data());
+                    cv::Mat cropWrapped(HEIGHT, WIDTH, CV_8UC1, sharedMemory->data());
+                    imgFrame = cropWrapped.clone();
                     img = wrapped.clone();
                 }
                 // TODO: Here, you can add some code to check the sampleTimePoint when the current frame was captured.
@@ -162,9 +180,13 @@ int32_t main(int32_t argc, char **argv)
                 // Convert BGR -> HSV
                 cv::cvtColor(imgBlur, imgHSV, cv::COLOR_BGR2HSV);
 
-                // Debug HSV filter
+                // ----> Call 2x method here <-----
                 cv::inRange(imgHSV, blueLow, blueHigh, frameHSV);
-                // cv::inRange(imgHSV, yellowLow, yellowHigh, frameHSV);
+                getCones(frameHSV, frameCropped, cv::Scalar(255, 0, 0));
+
+                cv::inRange(imgHSV, yellowLow, yellowHigh, frameHSV);
+                getCones(frameHSV, frameCropped, cv::Scalar(0, 255, 255));
+                // ----> Call 2x method here <-----
 
                 // Performance reading end
                 uint64_t endFrame = cv::getTickCount();
@@ -173,7 +195,7 @@ int32_t main(int32_t argc, char **argv)
                 // Debug text on original
                 cv::putText(img, date, cv::Point(25, 25), 5, 1, cv::Scalar(255,255,255), 1);
                 cv::putText(img, "TS: " + timestamp, cv::Point(25, 45), 5, 1, cv::Scalar(255,255,255), 1);
-                cv::putText(frameCropped, "Calculation Speed (ms): " + calcSpeed, cv::Point(25, 25), 5, 1, cv::Scalar(255, 255, 255), 1);
+                // cv::putText(frameCropped, "Calculation Speed (ms): " + calcSpeed, cv::Point(25, 25), 5, 1, cv::Scalar(255, 255, 255), 1);
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
@@ -185,8 +207,8 @@ int32_t main(int32_t argc, char **argv)
                 if (VERBOSE)
                 {
                     cv::imshow(sharedMemory->name().c_str(), img);
-                    cv::imshow("Filter - Debug", frameHSV);
-                    cv::imshow("Image Crop - Debug", frameCropped);
+                    // cv::imshow("Filter - Debug", frameHSV);
+                    // cv::imshow("Image Crop - Debug", frameCropped);
                     cv::waitKey(1);
                 }
             }
