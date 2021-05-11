@@ -20,18 +20,28 @@ image: registry.git.chalmers.se/courses/dit638/students/docker/docker:19.03.3
 variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+  DOCKER_BUILDKIT: 1
+  DOCKER_CLI_EXPERIMENTAL: enabled
+  BUILDX_URL: https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
 
 services:
   - name: registry.git.chalmers.se/courses/dit638/students/docker/docker:19.03.3-dind
-    alias: docker
+    alias: docker:19.03.3
+    command: ["--experimental"]
 
 stages:
   - build
   - deploy
   - coverage
 
-# Display information before we start the build.
+# Display information before we start the build and activate buildx.
 before_script:
+  - mkdir -p $HOME/.docker/cli-plugins/
+  - wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
+  - chmod a+x $HOME/.docker/cli-plugins/docker-buildx
+  - "echo -e '{\n  \"experimental\": \"enabled\"\n}' | tee $HOME/.docker/config.json"
+  - docker buildx
   - docker info
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
@@ -54,6 +64,7 @@ release:
     - docker-build
   stage: deploy
   script:
+    - docker buildx create --use
     - docker buildx build --push --platform linux/arm/v7,linux/arm64/v8,linux/386,linux/amd64 --tag "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" . .
 
 # This section describes what shall be done to generate code test coverage. (runs only when on master & merge requests)
