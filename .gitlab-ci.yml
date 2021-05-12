@@ -65,7 +65,7 @@ release:
     - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
   script:
     - docker buildx create --use
-    - docker buildx build --push --platform linux/amd64,linux/arm64 --tag "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
+    - docker buildx build --push --platform linux/amd64,linux/arm/v7 --tag "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
 
 # This section describes what shall be done to generate code test coverage. (runs only when on master & merge requests)
 #coverage-report:
