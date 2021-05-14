@@ -43,15 +43,18 @@ std::vector<std::vector<cv::Point>> yellowContours;
 bool blueInFrame = false, yellowInFrame = false;
 bool blueOnLeft, yellowOnLeft, methodRun = false;
 cv::Point centerPoint;
-double groundSteeringRequest = 0.0;
 
+double groundSteeringRequest = 0.0;
 double steeringAngle = 0.0;
+int correct = 0, incorrect = 0;
 
 void steeringAccuracy () {
     if(steeringAngle < groundSteeringRequest *0.5 || steeringAngle > groundSteeringRequest*1.5) {
         std::cout << "steeringAngle out of bounds" << std::endl;
+        incorrect++;
     } else {
         std::cout << "steeringAngle in bounds" << std::endl;
+        correct++;
     }
 }
 void trackCones() {
@@ -98,7 +101,7 @@ void trackCones() {
             }
         }
     } else {
-        std::cout << "No cones in frame" << std::endl;        
+        std::cout << "No cones in frame---------------" << std::endl;        
     }
     std::cout << "Steering request: " << steeringAngle << std::endl;
     steeringAccuracy();
@@ -321,6 +324,7 @@ int32_t main(int32_t argc, char **argv)
                 cv::putText(img, date, cv::Point(25, 25), 5, 1, cv::Scalar(255, 255, 255), 1);
                 cv::putText(img, "TS: " + timestamp, cv::Point(25, 45), 5, 1, cv::Scalar(255, 255, 255), 1);
                 cv::putText(img, "Calculation Speed (ms): " + calcSpeed, cv::Point(25, 65), 5, 1, cv::Scalar(255, 255, 255), 1);
+                cv::putText(img, "Average: " + std::to_string(correct / incorrect) + "%", cv::Point(25, 85), 5, 1, cv::Scalar(255, 255, 255), 1);
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
