@@ -32,8 +32,12 @@
 // Color thresholds
 cv::Scalar yellowLow = cv::Scalar(17, 89, 128);
 cv::Scalar yellowHigh = cv::Scalar(35, 175, 216);
-cv::Scalar blueLow = cv::Scalar(109, 96, 27);
-cv::Scalar blueHigh = cv::Scalar(120, 189, 86);
+// cv::Scalar blueLow = cv::Scalar(109, 96, 27);
+// cv::Scalar blueHigh = cv::Scalar(120, 189, 86);
+cv::Scalar blueLow = cv::Scalar(70, 43, 34);
+cv::Scalar blueHigh = cv::Scalar(120, 255, 255);
+
+int hLow = 0, hHigh = 179, sLow = 0, sHigh = 255, vLow = 0, vHigh = 255;
 
 const double MAX_ANGLE = 0.290888;
 const double ANGLE_MARGIN = MAX_ANGLE * 0.05;
@@ -295,8 +299,18 @@ int32_t main(int32_t argc, char **argv)
                 (HEIGHT / 5)); // rect height
 
             // OpenCV data structure to hold an image.
-            cv::Mat img, imgFrame, imgBlur, imgHSV, frameHSV, frameCropped, imgTest;
+            cv::Mat img, imgFrame, imgBlur, imgHSV, frameHSV, frameCropped, hsvDebug;
             centerPoint = cv::Point(WIDTH / 2, HEIGHT - 1);
+
+            if (VERBOSE) {
+                cv::namedWindow("HSV Debugger");
+                cv::createTrackbar("Hue - low", "HSV Debugger", &hLow, 179);
+                cv::createTrackbar("Hue - high", "HSV Debugger", &hHigh, 179);
+                cv::createTrackbar("Sat - low", "HSV Debugger", &sLow, 255);
+                cv::createTrackbar("Sat - high", "HSV Debugger", &sHigh, 255);
+                cv::createTrackbar("Val - low", "HSV Debugger", &vLow, 255);
+                cv::createTrackbar("Val - high", "HSV Debugger", &vHigh, 255);
+            }
 
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning())
@@ -383,14 +397,10 @@ int32_t main(int32_t argc, char **argv)
                 // Performance reading end
                 uint64_t endFrame = cv::getTickCount();
                 std::string calcSpeed = std::to_string(((endFrame - startFrame) / cv::getTickFrequency()) * 1000);
-
-                // Debug text on original
+                
+                // Average correct values converted to string
                 std::string averageText = std::to_string(average);
-                cv::putText(img, date, cv::Point(25, 25), 5, 1, cv::Scalar(255, 255, 255), 1);
-                cv::putText(img, "TS: " + timestamp, cv::Point(25, 45), 5, 1, cv::Scalar(255, 255, 255), 1);
-                cv::putText(img, "Calculation Speed (ms): " + calcSpeed, cv::Point(25, 65), 5, 1, cv::Scalar(255, 255, 255), 1);
-                cv::putText(img, "Average: " + averageText, cv::Point(25, 85), 5, 1, cv::Scalar(255, 255, 255), 1);
-
+                
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
@@ -401,8 +411,23 @@ int32_t main(int32_t argc, char **argv)
                 // Display image on your screen.
                 if (VERBOSE)
                 {
+                    hsvDebug = imgHSV.clone();
+                    cv::blur(hsvDebug, hsvDebug, cv::Size(7, 7));
+                    cv::cvtColor(hsvDebug, hsvDebug, cv::COLOR_BGR2HSV);
+                    cv::inRange(hsvDebug, cv::Scalar(hLow, sLow, vLow), cv::Scalar(hHigh, sHigh, vHigh), hsvDebug);
+                    hLow = cv::getTrackbarPos("Hue - low", "HSV Debugger");
+                    hHigh = cv::getTrackbarPos("Hue - high", "HSV Debugger");
+                    sLow = cv::getTrackbarPos("Sat - low", "HSV Debugger");
+                    sHigh = cv::getTrackbarPos("Sat - high", "HSV Debugger");
+                    vLow = cv::getTrackbarPos("Val - low", "HSV Debugger");
+                    vHigh = cv::getTrackbarPos("Val - high", "HSV Debugger");
+
+                    cv::putText(img, date, cv::Point(25, 25), 5, 1, cv::Scalar(255, 255, 255), 1);
+                    cv::putText(img, "TS: " + timestamp, cv::Point(25, 45), 5, 1, cv::Scalar(255, 255, 255), 1);
+                    cv::putText(img, "Calculation Speed (ms): " + calcSpeed, cv::Point(25, 65), 5, 1, cv::Scalar(255, 255, 255), 1);
+                    cv::putText(img, "Average: " + averageText, cv::Point(25, 85), 5, 1, cv::Scalar(255, 255, 255), 1);
                     cv::imshow(sharedMemory->name().c_str(), img);
-                    // cv::imshow("Filter - Debug", frameHSV);
+                    cv::imshow("Filter - Debug", hsvDebug);
                     // cv::imshow("Image Crop - Debug", frameCropped);
                     cv::waitKey(1);
                 }
