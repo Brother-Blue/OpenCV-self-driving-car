@@ -43,9 +43,17 @@ std::vector<std::vector<cv::Point>> yellowContours;
 bool blueInFrame = false, yellowInFrame = false;
 bool blueOnLeft, yellowOnLeft, methodRun = false;
 cv::Point centerPoint;
+double groundSteeringRequest = 0.0;
 
 double steeringAngle = 0.0;
 
+void steeringAccuracy () {
+    if(steeringAngle < groundSteeringRequest *0.5 || steeringAngle > groundSteeringRequest*1.5) {
+        std::cout << "steeringAngle out of bounds" << std::endl;
+    } else {
+        std::cout << "steeringAngle in bounds" << std::endl;
+    }
+}
 void trackCones() {
     if (blueInFrame && yellowInFrame) {
         steeringAngle = 0;
@@ -93,7 +101,9 @@ void trackCones() {
         std::cout << "No cones in frame" << std::endl;        
     }
     std::cout << "Steering request: " << steeringAngle << std::endl;
+    steeringAccuracy();
 }
+
 
 void getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color) {
     blueInFrame = false;
@@ -316,6 +326,7 @@ int32_t main(int32_t argc, char **argv)
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
+                    groundSteeringRequest = gsr.groundSteering();
                     trackCones();
                 }
 
