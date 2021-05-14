@@ -27,6 +27,7 @@
 #include <string>
 #include <sstream>
 #include <ctime>
+#include <algorithm>
 
 // Color thresholds
 cv::Scalar yellowLow = cv::Scalar(17, 89, 128);
@@ -41,7 +42,6 @@ const double ANGLE_MARGIN = MAX_ANGLE * 0.05;
 std::vector<std::vector<cv::Point>> blueContours;
 std::vector<std::vector<cv::Point>> yellowContours;
 bool blueInFrame = false, yellowInFrame = false;
-bool blueOnLeft, yellowOnLeft, methodRun = false;
 cv::Point centerPoint;
 
 double groundSteeringRequest = 0.0;
@@ -59,49 +59,20 @@ void steeringAccuracy () {
     total ++;
     average = (correct/total) * 100;
 }
+
+int isOnLeft(cv::Point pos) {
+    if (std::find(blueContours.begin(), blueContours.end(), pos) != blueContours.end()) {
+        return 1;
+    } else if (std::find(yellowContours.begin(), yellowContours.end(), pos) != yellowContours.end()) {
+        return 2;
+    } else {
+        return 0;
+    }
+}
+
 void trackCones() {
     if (blueInFrame && yellowInFrame) {
-        steeringAngle = 0;
-    } else if (blueInFrame && !yellowInFrame) {
-        if (blueOnLeft) {
-            if (steeringAngle < 0) {
-                steeringAngle = 0;
-            }
-            if (steeringAngle > MAX_ANGLE) {
-                steeringAngle = MAX_ANGLE;
-            } else {
-                steeringAngle += ANGLE_MARGIN;
-            }
-        } else {
-            if (steeringAngle > 0) {
-                steeringAngle = 0;
-            }
-            if (steeringAngle < -MAX_ANGLE) {
-                steeringAngle = -MAX_ANGLE;
-            } else {
-                steeringAngle -= ANGLE_MARGIN;
-            }
-        }
-    } else if (!blueInFrame && yellowInFrame) {
-        if (yellowOnLeft) {
-            if (steeringAngle < 0) {
-                steeringAngle = 0;
-            }
-            if (steeringAngle > MAX_ANGLE) {
-                steeringAngle = MAX_ANGLE;
-            } else {
-                steeringAngle += ANGLE_MARGIN;
-            }
-        } else {
-            if (steeringAngle > 0) {
-                steeringAngle = 0;
-            }
-            if (steeringAngle < -MAX_ANGLE) {
-                steeringAngle = -MAX_ANGLE;
-            } else {
-                steeringAngle -= ANGLE_MARGIN;
-            }
-        }
+    
     } else {
         std::cout << "No cones in frame" << std::endl;        
     }
@@ -132,17 +103,6 @@ void getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color) {
                         cv::Point(bBox.x, bBox.y - 25),
                         5, 1,
                         cv::Scalar(0, 0, 255), 1);
-                }
-                if (!methodRun) {
-                    methodRun = true;
-                    if (bBox.x < centerPoint.x) {
-                        blueOnLeft = true;
-                        yellowOnLeft = false;
-                    }
-                    else {
-                        yellowOnLeft = true;
-                        blueOnLeft = false;
-                    }
                 }
                 prevBox = bBox;
             }
