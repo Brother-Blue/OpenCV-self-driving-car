@@ -77,7 +77,8 @@ bool isOnLeft(cv::Point pos)
     // Is in blue contours array
     if (std::find(blueContours[0].begin(), blueContours[0].end(), pos) != blueContours[0].end())
     {
-        if (pos.x < centerPoint.x) {
+        if (pos.x < centerPoint.x)
+        {
             return true;
         }
         return false;
@@ -85,11 +86,12 @@ bool isOnLeft(cv::Point pos)
     // Is in yellow contours array
     else if (std::find(yellowContours[0].begin(), yellowContours[0].end(), pos) != yellowContours[0].end())
     {
-        if (pos.x < centerPoint.x) {
+        if (pos.x < centerPoint.x)
+        {
             return true;
         }
         return false;
-     }
+    }
     else
     {
         return false;
@@ -115,14 +117,26 @@ double trackCones()
                 // Blue is further, turn left
                 if (blueDistFromCenter > yellowDistFromCenter)
                 {
-                    if (steeringAngle < 0) steeringAngle = 0;
-                    steeringAngle = steeringAngle > MAX_ANGLE ? MAX_ANGLE : steeringAngle += ANGLE_MARGIN;
+                    if (steeringAngle < 0)
+                    {
+                        steeringAngle = 0;
+                    }
+                    if (steeringAngle < MAX_ANGLE)
+                    {
+                        steeringAngle += ANGLE_MARGIN;
+                    }
                 }
                 // Yellow is further, turn right
                 else
                 {
-                    if (steeringAngle > 0) steeringAngle = 0;
-                    steeringAngle = steeringAngle < -MAX_ANGLE ? -MAX_ANGLE : steeringAngle -= ANGLE_MARGIN;
+                    if (steeringAngle > 0)
+                    {
+                        steeringAngle = 0;
+                    }
+                    if (steeringAngle > -MAX_ANGLE)
+                    {
+                        steeringAngle -= ANGLE_MARGIN;
+                    }
                 }
             }
             else if (isOnLeft(yellowCone))
@@ -130,14 +144,26 @@ double trackCones()
                 // Blue is further, turn right
                 if (blueDistFromCenter > yellowDistFromCenter)
                 {
-                    if (steeringAngle > 0) steeringAngle = 0;
-                    steeringAngle = steeringAngle < -MAX_ANGLE ? -MAX_ANGLE : steeringAngle -= ANGLE_MARGIN;
+                    if (steeringAngle > 0)
+                    {
+                        steeringAngle = 0;
+                    }
+                    if (steeringAngle > -MAX_ANGLE)
+                    {
+                        steeringAngle -= ANGLE_MARGIN;
+                    }
                 }
                 // Yellow is further, turn left
                 else
                 {
-                    if (steeringAngle < 0) steeringAngle = 0;
-                    steeringAngle = steeringAngle > MAX_ANGLE ? MAX_ANGLE : steeringAngle += ANGLE_MARGIN;
+                    if (steeringAngle < 0)
+                    {
+                        steeringAngle = 0;
+                    }
+                    if (steeringAngle < MAX_ANGLE)
+                    {
+                        steeringAngle += ANGLE_MARGIN;
+                    }
                 }
             }
             else
@@ -152,21 +178,52 @@ double trackCones()
     }
     else if (blueInFrame && !yellowInFrame)
     {
-        if (isOnLeft(blueCone)) {
-            if (steeringAngle > 0) steeringAngle = 0;
-            steeringAngle = steeringAngle < -MAX_ANGLE ? -MAX_ANGLE : steeringAngle -= ANGLE_MARGIN;
-        } else {
-            if (steeringAngle < 0) steeringAngle = 0;
-            steeringAngle = steeringAngle > MAX_ANGLE ? MAX_ANGLE : steeringAngle += ANGLE_MARGIN;        }
+        if (isOnLeft(blueCone))
+        {
+            if (steeringAngle > 0)
+            {
+                steeringAngle = 0;
+            }
+            if (steeringAngle > -MAX_ANGLE)
+            {
+                steeringAngle -= ANGLE_MARGIN;
+            }
+        }
+        else
+        {
+            if (steeringAngle < 0)
+            {
+                steeringAngle = 0;
+            }
+            if (steeringAngle < MAX_ANGLE)
+            {
+                steeringAngle += ANGLE_MARGIN;
+            }
+        }
     }
     else if (yellowInFrame && !blueInFrame)
     {
-        if (isOnLeft(yellowCone)) {
-            if (steeringAngle > 0) steeringAngle = 0;
-            steeringAngle = steeringAngle < -MAX_ANGLE ? -MAX_ANGLE : steeringAngle -= ANGLE_MARGIN;
-        } else {
-            if (steeringAngle < 0) steeringAngle = 0;
-            steeringAngle = steeringAngle > MAX_ANGLE ? MAX_ANGLE : steeringAngle += ANGLE_MARGIN; 
+        if (isOnLeft(yellowCone))
+        {
+            if (steeringAngle > 0)
+            {
+                steeringAngle = 0;
+            }
+            if (steeringAngle > -MAX_ANGLE)
+            {
+                steeringAngle -= ANGLE_MARGIN;
+            }
+        }
+        else
+        {
+            if (steeringAngle < 0)
+            {
+                steeringAngle = 0;
+            }
+            if (steeringAngle < MAX_ANGLE)
+            {
+                steeringAngle += ANGLE_MARGIN;
+            }
         }
     }
     else
@@ -312,7 +369,8 @@ int32_t main(int32_t argc, char **argv)
             cv::Mat img, imgFrame, imgBlur, imgHSV, frameHSV, frameCropped, hsvDebug;
             centerPoint = cv::Point(WIDTH / 2, HEIGHT - 1);
 
-            if (VERBOSE) {
+            if (VERBOSE)
+            {
                 cv::namedWindow("HSV Debugger");
                 cv::createTrackbar("Hue - low", "HSV Debugger", &hLow, 179);
                 cv::createTrackbar("Hue - high", "HSV Debugger", &hHigh, 179);
@@ -407,10 +465,10 @@ int32_t main(int32_t argc, char **argv)
                 // Performance reading end
                 uint64_t endFrame = cv::getTickCount();
                 std::string calcSpeed = std::to_string(((endFrame - startFrame) / cv::getTickFrequency()) * 1000);
-                
+
                 // Average correct values converted to string
                 std::string averageText = std::to_string(average);
-                
+
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
