@@ -42,59 +42,152 @@ const double ANGLE_MARGIN = MAX_ANGLE * 0.05;
 std::vector<std::vector<cv::Point>> blueContours;
 std::vector<std::vector<cv::Point>> yellowContours;
 bool blueInFrame = false, yellowInFrame = false;
-cv::Point centerPoint;
+cv::Point centerPoint, blueCone, yellowCone;
 
 double groundSteeringRequest = 0.0;
 double average = 0.0;
 double steeringAngle = 0.0;
 double correct = 0.0, total = 0.0;
 
-void steeringAccuracy () {
-    if(steeringAngle < groundSteeringRequest *0.5 || steeringAngle > groundSteeringRequest*1.5) {
-        std::cout << "steeringAngle out of bounds" << std::endl;
-    } else {
-        std::cout << "steeringAngle in bounds" << std::endl;
+void steeringAccuracy()
+{
+    if (steeringAngle < groundSteeringRequest * 0.5 || steeringAngle > groundSteeringRequest * 1.5)
+    {
+    }
+    else
+    {
         correct++;
     }
-    total ++;
-    average = (correct/total) * 100;
+    total++;
+    average = (correct / total) * 100;
 }
 
-int isOnLeft(cv::Point pos) {
-    if (std::find(blueContours.begin(), blueContours.end(), pos) != blueContours.end()) {
-        return 1;
-    } else if (std::find(yellowContours.begin(), yellowContours.end(), pos) != yellowContours.end()) {
-        return 2;
-    } else {
-        return 0;
+// Point will only be in one or the other array so no need to check for overlaps
+bool isOnLeft(cv::Point pos)
+{
+    // Is in blue contours array
+    if (std::find(blueContours[0].begin(), blueContours[0].end(), pos) != blueContours[0].end())
+    {
+        if (pos.x < centerPoint.x) {
+            return true;
+        }
+        return false;
+    }
+    // Is in yellow contours array
+    else if (std::find(yellowContours[0].begin(), yellowContours[0].end(), pos) != yellowContours[0].end())
+    {
+        if (pos.x < centerPoint.x) {
+            return true;
+        }
+        return false;
+     }
+    else
+    {
+        return false;
     }
 }
 
-void trackCones() {
-    if (blueInFrame && yellowInFrame) {
-    
-    } else {
-        std::cout << "No cones in frame" << std::endl;        
+double getDistance(cv::Point pos1, cv::Point pos2)
+{
+    return sqrt(pow(pos2.x - pos1.x, 2) + pow(pos2.y - pos1.y, 2));
+}
+
+double trackCones()
+{
+    if (blueInFrame && yellowInFrame)
+    {
+        double blueDistFromCenter = getDistance(centerPoint, blueCone);
+        double yellowDistFromCenter = getDistance(centerPoint, yellowCone);
+        if (blueDistFromCenter - yellowDistFromCenter > 64)
+        {
+            if (isOnLeft(blueCone))
+            {
+                // Blue is further, turn left
+                if (blueDistFromCenter > yellowDistFromCenter)
+                {
+                    if (steeringAngle < 0) steeringAngle = 0;
+                    steeringAngle = steeringAngle > MAX_ANGLE ? MAX_ANGLE : steeringAngle += ANGLE_MARGIN;
+                }
+                // Yellow is further, turn right
+                else
+                {
+                    if (steeringAngle > 0) steeringAngle = 0;
+                    steeringAngle = steeringAngle < -MAX_ANGLE ? -MAX_ANGLE : steeringAngle -= ANGLE_MARGIN;
+                }
+            }
+            else if (isOnLeft(yellowCone))
+            {
+                // Blue is further, turn right
+                if (blueDistFromCenter > yellowDistFromCenter)
+                {
+                    if (steeringAngle > 0) steeringAngle = 0;
+                    steeringAngle = steeringAngle < -MAX_ANGLE ? -MAX_ANGLE : steeringAngle -= ANGLE_MARGIN;
+                }
+                // Yellow is further, turn left
+                else
+                {
+                    if (steeringAngle < 0) steeringAngle = 0;
+                    steeringAngle = steeringAngle > MAX_ANGLE ? MAX_ANGLE : steeringAngle += ANGLE_MARGIN;
+                }
+            }
+            else
+            {
+                steeringAngle = 0;
+            }
+        }
+        else
+        {
+            steeringAngle = 0;
+        }
+    }
+    else if (blueInFrame && !yellowInFrame)
+    {
+        if (isOnLeft(blueCone)) {
+            if (steeringAngle > 0) steeringAngle = 0;
+            steeringAngle = steeringAngle < -MAX_ANGLE ? -MAX_ANGLE : steeringAngle -= ANGLE_MARGIN;
+        } else {
+            if (steeringAngle < 0) steeringAngle = 0;
+            steeringAngle = steeringAngle > MAX_ANGLE ? MAX_ANGLE : steeringAngle += ANGLE_MARGIN;        }
+    }
+    else if (yellowInFrame && !blueInFrame)
+    {
+        if (isOnLeft(yellowCone)) {
+            if (steeringAngle > 0) steeringAngle = 0;
+            steeringAngle = steeringAngle < -MAX_ANGLE ? -MAX_ANGLE : steeringAngle -= ANGLE_MARGIN;
+        } else {
+            if (steeringAngle < 0) steeringAngle = 0;
+            steeringAngle = steeringAngle > MAX_ANGLE ? MAX_ANGLE : steeringAngle += ANGLE_MARGIN; 
+        }
+    }
+    else
+    {
+        std::cout << "No cones in frame" << std::endl;
+        steeringAngle = 0;
     }
     std::cout << "Steering request: " << steeringAngle << std::endl;
     steeringAccuracy();
+    return steeringAngle;
 }
 
 // Method for filtering and creating rectangle around BLUE cones
-void getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color) {
+void getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
+{
     blueInFrame = false;
     cv::Rect prevBox(cv::Point(0, 0), cv::Size(0, 0));
     cv::findContours(detectImage, blueContours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
-    if (blueContours.size() > 0) {
+    if (blueContours.size() > 0)
+    {
         blueInFrame = true;
         for (size_t i = 0; i < blueContours.size(); i++)
         {
             cv::Rect bBox = cv::boundingRect(blueContours[i]);
             // Add some restriction to rectangle size to avoid
             // duplicate 2x2 rectangles appearing on the same cone
-            if (bBox.area() > 30) {
+            if (bBox.area() > 30)
+            {
                 // Only draw a new rect at the closest (bottom-most) cone
-                if (bBox.y > prevBox.y) {
+                if (bBox.y > prevBox.y)
+                {
                     cv::rectangle(drawImage, bBox.tl(), bBox.br(), color, 2);
                     cv::putText(
                         drawImage,
@@ -107,24 +200,29 @@ void getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color) {
                 prevBox = bBox;
             }
         }
+        blueCone = cv::Point(prevBox.x + prevBox.width / 2, prevBox.y + prevBox.height / 2);
     }
 }
 
 // Method for filtering and creating rectangle around YELLOW cones
-void getYellowCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color) {
+void getYellowCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
+{
     yellowInFrame = false;
     cv::Rect prevBox(cv::Point(0, 0), cv::Size(0, 0));
     cv::findContours(detectImage, yellowContours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
-    if (yellowContours.size() > 0) {
+    if (yellowContours.size() > 0)
+    {
         yellowInFrame = true;
         for (size_t i = 0; i < yellowContours.size(); i++)
         {
             cv::Rect bBox = cv::boundingRect(yellowContours[i]);
             // Add some restriction to rectangle size to avoid
             // duplicate 2x2 rectangles appearing on the same cone
-            if (bBox.area() > 30) {
+            if (bBox.area() > 30)
+            {
                 // Only draw a new rect at the closest (bottom-most) cone
-                if (bBox.y > prevBox.y) {
+                if (bBox.y > prevBox.y)
+                {
                     cv::rectangle(drawImage, bBox.tl(), bBox.br(), color, 2);
                     cv::putText(
                         drawImage,
@@ -137,6 +235,7 @@ void getYellowCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color) {
                 prevBox = bBox;
             }
         }
+        yellowCone = cv::Point(prevBox.x + prevBox.width / 2, prevBox.y + prevBox.height / 2);
     }
 }
 
@@ -192,12 +291,12 @@ int32_t main(int32_t argc, char **argv)
             cv::Rect roi(
                 0,             // x pos
                 HEIGHT / 2,    // y pos
-                WIDTH-1,     // rect width
+                WIDTH - 1,     // rect width
                 (HEIGHT / 5)); // rect height
 
             // OpenCV data structure to hold an image.
             cv::Mat img, imgFrame, imgBlur, imgHSV, frameHSV, frameCropped, imgTest;
-            centerPoint = cv::Point(WIDTH/2, HEIGHT-1);
+            centerPoint = cv::Point(WIDTH / 2, HEIGHT - 1);
 
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning())
@@ -279,6 +378,8 @@ int32_t main(int32_t argc, char **argv)
                 getYellowCones(frameHSV, frameCropped, cv::Scalar(0, 255, 255));
                 // ----> Call 2x method here <-----
 
+                trackCones();
+
                 // Performance reading end
                 uint64_t endFrame = cv::getTickCount();
                 std::string calcSpeed = std::to_string(((endFrame - startFrame) / cv::getTickFrequency()) * 1000);
@@ -295,7 +396,6 @@ int32_t main(int32_t argc, char **argv)
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
                     groundSteeringRequest = gsr.groundSteering();
-                    trackCones();
                 }
 
                 // Display image on your screen.
@@ -303,7 +403,7 @@ int32_t main(int32_t argc, char **argv)
                 {
                     cv::imshow(sharedMemory->name().c_str(), img);
                     // cv::imshow("Filter - Debug", frameHSV);
-                    cv::imshow("Image Crop - Debug", frameCropped);
+                    // cv::imshow("Image Crop - Debug", frameCropped);
                     cv::waitKey(1);
                 }
             }
