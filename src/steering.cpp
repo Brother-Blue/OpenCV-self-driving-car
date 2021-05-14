@@ -24,6 +24,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+// Library's
 #include <string>
 #include <sstream>
 #include <ctime>
@@ -35,6 +36,7 @@ cv::Scalar yellowHigh = cv::Scalar(35, 175, 216);
 cv::Scalar blueLow = cv::Scalar(109, 96, 27);
 cv::Scalar blueHigh = cv::Scalar(120, 189, 86);
 
+// Constants
 const double MAX_ANGLE = 0.290888;
 const double ANGLE_MARGIN = MAX_ANGLE * 0.05;
 
@@ -44,12 +46,14 @@ std::vector<std::vector<cv::Point>> yellowContours;
 bool blueInFrame = false, yellowInFrame = false;
 cv::Point centerPoint, blueCone, yellowCone;
 
+// Variables
 double groundSteeringRequest = 0.0;
 double average = 0.0;
 double steeringAngle = 0.0;
 double correct = 0.0, total = 0.0;
 
-void steeringAccuracy()
+// Calculates the average accuracy of our steering angle
+double steeringAccuracy()
 {
     if (steeringAngle < groundSteeringRequest * 0.5 || steeringAngle > groundSteeringRequest * 1.5)
     {
@@ -60,6 +64,7 @@ void steeringAccuracy()
     }
     total++;
     average = (correct / total) * 100;
+    return average;
 }
 
 // Point will only be in one or the other array so no need to check for overlaps
@@ -87,6 +92,7 @@ bool isOnLeft(cv::Point pos)
     }
 }
 
+// Returns distance of object (from center)
 double getDistance(cv::Point pos1, cv::Point pos2)
 {
     return sqrt(pow(pos2.x - pos1.x, 2) + pow(pos2.y - pos1.y, 2));
@@ -170,7 +176,7 @@ double trackCones()
 }
 
 // Method for filtering and creating rectangle around BLUE cones
-void getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
+bool getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
 {
     blueInFrame = false;
     cv::Rect prevBox(cv::Point(0, 0), cv::Size(0, 0));
@@ -201,11 +207,13 @@ void getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
             }
         }
         blueCone = cv::Point(prevBox.x + prevBox.width / 2, prevBox.y + prevBox.height / 2);
+        return true;
     }
+    return false;
 }
 
 // Method for filtering and creating rectangle around YELLOW cones
-void getYellowCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
+bool getYellowCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
 {
     yellowInFrame = false;
     cv::Rect prevBox(cv::Point(0, 0), cv::Size(0, 0));
@@ -236,7 +244,9 @@ void getYellowCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
             }
         }
         yellowCone = cv::Point(prevBox.x + prevBox.width / 2, prevBox.y + prevBox.height / 2);
+        return true;
     }
+    return false;
 }
 
 int32_t main(int32_t argc, char **argv)
