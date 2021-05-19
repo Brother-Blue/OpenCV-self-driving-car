@@ -41,8 +41,9 @@ cv::Scalar blueHigh = cv::Scalar(120, 255, 255);
 int hLow = 0, hHigh = 179, sLow = 0, sHigh = 255, vLow = 0, vHigh = 255;
 
 // Constants
-const double MAX_ANGLE = 0.290888;
-const double ANGLE_MARGIN = MAX_ANGLE * 0.05;
+const double MAX_ANGLE = 0.290888;             // Max steering angle for car
+const double ANGLE_MARGIN = MAX_ANGLE * 0.15; // Steering angle increments
+const int DIST_THRESHOLD = 32;                 // Threshold for distances from cone pos to car
 
 // Vector of vectors to store points of the 'cones' in HSV filter img.
 std::vector<std::vector<cv::Point>> blueContours;
@@ -59,43 +60,16 @@ double correct = 0.0, total = 0.0;
 // Calculates the average accuracy of our steering angle
 double steeringAccuracy()
 {
-    if (steeringAngle < groundSteeringRequest * 0.5 || steeringAngle > groundSteeringRequest * 1.5)
-    {
-    }
-    else
+    // Check if the steering is outside of the 50% margin
+    if (!(steeringAngle < groundSteeringRequest * 0.5 || steeringAngle > groundSteeringRequest * 1.5) && steeringAngle > 0)
     {
         correct++;
     }
-    total++;
+    if (groundSteeringRequest > 0) {
+        total++;
+    }
     average = (correct / total) * 100;
     return average;
-}
-
-// Point will only be in one or the other array so no need to check for overlaps
-bool isOnLeft(cv::Point pos)
-{
-    // Is in blue contours array
-    if (std::find(blueContours[0].begin(), blueContours[0].end(), pos) != blueContours[0].end())
-    {
-        if (pos.x < centerPoint.x)
-        {
-            return true;
-        }
-        return false;
-    }
-    // Is in yellow contours array
-    else if (std::find(yellowContours[0].begin(), yellowContours[0].end(), pos) != yellowContours[0].end())
-    {
-        if (pos.x < centerPoint.x)
-        {
-            return true;
-        }
-        return false;
-    }
-    else
-    {
-        return false;
-    }
 }
 
 // Returns distance of object (from center)
@@ -104,134 +78,76 @@ double getDistance(cv::Point pos1, cv::Point pos2)
     return sqrt(pow(pos2.x - pos1.x, 2) + pow(pos2.y - pos1.y, 2));
 }
 
-double trackCones()
+// 1 left, -1 for right
+bool steer(std::string dir)
 {
-    if (blueInFrame && yellowInFrame)
+    int a = dir == "Left" ? 1 : -1;
+    switch (a)
     {
-        double blueDistFromCenter = getDistance(centerPoint, blueCone);
-        double yellowDistFromCenter = getDistance(centerPoint, yellowCone);
-        if (blueDistFromCenter - yellowDistFromCenter > 64)
+    case -1:
+        if (steeringAngle > 0)
         {
-            if (isOnLeft(blueCone))
+            steeringAngle = 0; // Maybe loop this so it gradually changes
+        }
+        break;
+    case 1:
+        if (steeringAngle < 0)
+        {
+            steeringAngle = 0; // Maybe loop this so it gradually changes
+        }
+        break;
+    default:
+        return false;
+    }
+    if (steeringAngle < 0) {
+        std::cout << "0" << std::endl;
+        steeringAngle *= ANGLE_MARGIN;
+    } else {
+        if (a == -1) {
+            if (steeringAngle == 0)
             {
-                // Blue is further, turn left
-                if (blueDistFromCenter > yellowDistFromCenter)
-                {
-                    if (steeringAngle < 0)
-                    {
-                        steeringAngle = 0;
-                    }
-                    if (steeringAngle < MAX_ANGLE)
-                    {
-                        steeringAngle += ANGLE_MARGIN;
-                    }
-                }
-                // Yellow is further, turn right
-                else
-                {
-                    if (steeringAngle > 0)
-                    {
-                        steeringAngle = 0;
-                    }
-                    if (steeringAngle > -MAX_ANGLE)
-                    {
-                        steeringAngle -= ANGLE_MARGIN;
-                    }
-                }
-            }
-            else if (isOnLeft(yellowCone))
-            {
-                // Blue is further, turn right
-                if (blueDistFromCenter > yellowDistFromCenter)
-                {
-                    if (steeringAngle > 0)
-                    {
-                        steeringAngle = 0;
-                    }
-                    if (steeringAngle > -MAX_ANGLE)
-                    {
-                        steeringAngle -= ANGLE_MARGIN;
-                    }
-                }
-                // Yellow is further, turn left
-                else
-                {
-                    if (steeringAngle < 0)
-                    {
-                        steeringAngle = 0;
-                    }
-                    if (steeringAngle < MAX_ANGLE)
-                    {
-                        steeringAngle += ANGLE_MARGIN;
-                    }
-                }
+                std::cout << "1" << std::endl;
+                steeringAngle = -ANGLE_MARGIN;
             }
             else
             {
-                steeringAngle = 0;
+                std::cout << "2" << std::endl;
+                steeringAngle *= a*ANGLE_MARGIN;
             }
-        }
-        else
-        {
-            steeringAngle = 0;
-        }
-    }
-    else if (blueInFrame && !yellowInFrame)
-    {
-        if (isOnLeft(blueCone))
-        {
-            if (steeringAngle > 0)
+        } else {
+            if (steeringAngle == 0)
             {
-                steeringAngle = 0;
+                std::cout << "3" << std::endl;
+                steeringAngle = ANGLE_MARGIN;
             }
-            if (steeringAngle > -MAX_ANGLE)
+            else
             {
-                steeringAngle -= ANGLE_MARGIN;
-            }
-        }
-        else
-        {
-            if (steeringAngle < 0)
-            {
-                steeringAngle = 0;
-            }
-            if (steeringAngle < MAX_ANGLE)
-            {
-                steeringAngle += ANGLE_MARGIN;
+                std::cout << "4" << std::endl;
+                steeringAngle *= ANGLE_MARGIN;
             }
         }
     }
-    else if (yellowInFrame && !blueInFrame)
-    {
-        if (isOnLeft(yellowCone))
-        {
-            if (steeringAngle > 0)
-            {
-                steeringAngle = 0;
-            }
-            if (steeringAngle > -MAX_ANGLE)
-            {
-                steeringAngle -= ANGLE_MARGIN;
-            }
+    return true;
+}
+
+double trackCones()
+{
+    if (blueInFrame && yellowInFrame) {
+        steeringAngle = 0;
+    } else if (yellowInFrame && !blueInFrame) {
+        if (yellowCone.x < centerPoint.x) {
+            steer("Left");
+        } else {
+            steer("Right");
         }
-        else
-        {
-            if (steeringAngle < 0)
-            {
-                steeringAngle = 0;
-            }
-            if (steeringAngle < MAX_ANGLE)
-            {
-                steeringAngle += ANGLE_MARGIN;
-            }
-        }
-    }
-    else
-    {
-        //std::cout << "No cones in frame" << std::endl;
+    } else {
         steeringAngle = 0;
     }
-    //std::cout << "Steering request: " << steeringAngle << std::endl;
+
+    std::cout << steeringAngle
+            << ";" << groundSteeringRequest
+            << ";" << abs(steeringAngle - groundSteeringRequest) 
+            << std::endl;
     steeringAccuracy();
     return steeringAngle;
 }
@@ -473,7 +389,7 @@ int32_t main(int32_t argc, char **argv)
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     //std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
-                    std::cout << "group_01;" << timestamp << ";" << steeringAngle << std::endl;
+                    //std::cout << "group_01;" << timestamp << ";" << steeringAngle << std::endl;
                     groundSteeringRequest = gsr.groundSteering();
                 }
 
