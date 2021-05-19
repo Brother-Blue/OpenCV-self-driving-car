@@ -228,7 +228,7 @@ double trackCones()
     }
     else
     {
-        std::cout << "No cones in frame" << std::endl;
+        //std::cout << "No cones in frame" << std::endl;
         steeringAngle = 0;
     }
     //std::cout << "Steering request: " << steeringAngle << std::endl;
