@@ -231,7 +231,7 @@ double trackCones()
         std::cout << "No cones in frame" << std::endl;
         steeringAngle = 0;
     }
-    std::cout << "Steering request: " << steeringAngle << std::endl;
+    //std::cout << "Steering request: " << steeringAngle << std::endl;
     steeringAccuracy();
     return steeringAngle;
 }
@@ -472,7 +472,8 @@ int32_t main(int32_t argc, char **argv)
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
-                    std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
+                    //std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
+                    std::cout << "group_01;" << timestamp << ";" << steeringAngle << std::endl;
                     groundSteeringRequest = gsr.groundSteering();
                 }
 
