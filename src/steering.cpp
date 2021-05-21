@@ -41,112 +41,161 @@ cv::Scalar blueHigh = cv::Scalar(120, 255, 255);
 int hLow = 0, hHigh = 179, sLow = 0, sHigh = 255, vLow = 0, vHigh = 255;
 
 // Constants
-const double MAX_ANGLE = 0.290888;             // Max steering angle for car
-const double ANGLE_MARGIN = MAX_ANGLE * 0.15; // Steering angle increments
-const int DIST_THRESHOLD = 32;                 // Threshold for distances from cone pos to car
+const double MAX_ANGLE = 0.290888;                      // Max steering angle for car
+const double ANGLE_MARGIN = MAX_ANGLE * 0.05;           // Angle margin
+const double TURN_VAL =  0.12316760378897237;           // Turning value found through linear regression
+const int DIST_THRESHOLD = 32;                          // Threshold for distances from cone pos to car
 
 // Vector of vectors to store points of the 'cones' in HSV filter img.
 std::vector<std::vector<cv::Point>> blueContours;
 std::vector<std::vector<cv::Point>> yellowContours;
-bool blueInFrame = false, yellowInFrame = false;
-cv::Point centerPoint, blueCone, yellowCone;
+cv::Point centerPoint, blueCone, yellowCone, blueConePrev, yellowConePrev;
 
 // Variables
 double groundSteeringRequest = 0.0;
 double average = 0.0;
 double steeringAngle = 0.0;
-double correct = 0.0, total = 0.0;
+double correct = 0.0, total = 0.0, ourLeft = 0, hisLeft = 0, ourRight = 0, hisRight = 0, avgLeft = 0.0, avgRight = 0.0;
+bool blueInFrame = false, yellowInFrame = false;
+bool foundBlueConeOnce = false, foundYellowConeOnce = false, blueOnLeft = false, yellowOnLeft = false;
 
 // Calculates the average accuracy of our steering angle
 double steeringAccuracy()
 {
     // Check if the steering is outside of the 50% margin
-    if (!(steeringAngle < groundSteeringRequest * 0.5 || steeringAngle > groundSteeringRequest * 1.5) && steeringAngle > 0)
+    if (!(steeringAngle < groundSteeringRequest * 0.5 || steeringAngle > groundSteeringRequest * 1.5))
     {
         correct++;
     }
-    if (groundSteeringRequest > 0) {
-        total++;
+    if (steeringAngle > 0) {
+        ourLeft++;
+    } else if (steeringAngle < 0) {
+        ourRight++;
     }
+    if (groundSteeringRequest > 0) {
+        hisLeft++;
+    } else if (groundSteeringRequest < 0) {
+        hisRight++;
+    }
+    total++;
     average = (correct / total) * 100;
+    avgLeft = (ourLeft / hisLeft) * 100;
+    avgRight = (ourRight / hisRight) * 100;
     return average;
 }
 
 // Returns distance of object (from center)
 double getDistance(cv::Point pos1, cv::Point pos2)
-{
+{           
     return sqrt(pow(pos2.x - pos1.x, 2) + pow(pos2.y - pos1.y, 2));
 }
 
 // 1 left, -1 for right
-bool steer(std::string dir)
+bool steer(std::string dir, double intensity)
 {
     int a = dir == "Left" ? 1 : -1;
     switch (a)
     {
     case -1:
+        // Check if we had been turning left, if so reset angle to 0
         if (steeringAngle > 0)
         {
-            steeringAngle = 0; // Maybe loop this so it gradually changes
+            steeringAngle = 0;
         }
         break;
     case 1:
+        // Check if we had been turning right, if so reset angle to 0
         if (steeringAngle < 0)
         {
-            steeringAngle = 0; // Maybe loop this so it gradually changes
+            steeringAngle = 0;
         }
         break;
     default:
         return false;
     }
-    if (steeringAngle < 0) {
-        std::cout << "0" << std::endl;
-        steeringAngle *= ANGLE_MARGIN;
-    } else {
-        if (a == -1) {
-            if (steeringAngle == 0)
-            {
-                std::cout << "1" << std::endl;
-                steeringAngle = -ANGLE_MARGIN;
-            }
-            else
-            {
-                std::cout << "2" << std::endl;
-                steeringAngle *= a*ANGLE_MARGIN;
-            }
-        } else {
-            if (steeringAngle == 0)
-            {
-                std::cout << "3" << std::endl;
-                steeringAngle = ANGLE_MARGIN;
-            }
-            else
-            {
-                std::cout << "4" << std::endl;
-                steeringAngle *= ANGLE_MARGIN;
-            }
-        }
+    steeringAngle = a * TURN_VAL * (1 + intensity);
+    if (steeringAngle <= -MAX_ANGLE) {
+        steeringAngle = -MAX_ANGLE;
+    } else if (steeringAngle >= MAX_ANGLE) {
+        steeringAngle = MAX_ANGLE;
     }
     return true;
 }
 
 double trackCones()
 {
+    // If both are in frame return 0
     if (blueInFrame && yellowInFrame) {
         steeringAngle = 0;
-    } else if (yellowInFrame && !blueInFrame) {
-        if (yellowCone.x < centerPoint.x) {
-            steer("Left");
-        } else {
-            steer("Right");
-        }
     } else {
-        steeringAngle = 0;
+        double intensity;
+        // If yellow is on the left side
+        // Car is turning clockwise
+        if (yellowOnLeft) {
+            // If only yellow in frame
+            if (yellowInFrame) {
+                intensity = (yellowCone.x / centerPoint.x);
+                // Car is turning counterclockwise
+                if (yellowCone.x > yellowConePrev.x) {
+                    steer("Right", intensity);
+                } else {
+                    steeringAngle = 0;
+                }
+            }
+            else {
+                // This is where more logic is needed
+                // TODO: This is where more logic is needed
+                if (blueInFrame) {
+                    intensity = (centerPoint.x / blueCone.x);
+                    if (blueCone.y == blueConePrev.y) {
+                        // The car has not moved
+                        steeringAngle = 0;
+                    } else if (blueCone.y < blueConePrev.y) {
+                        // New cone targeted
+                    } else {
+                        // Current targeted cone moving closer
+                        steer("Left", intensity);
+                    }
+                }
+            }
+        // If blue is on the left side
+        // Car is turning clockwise
+        } else if (blueOnLeft) {
+            // If only blue in frame
+            if (blueInFrame) {
+                intensity = (blueCone.x / centerPoint.x);
+                if (blueCone.x > blueConePrev.x) {
+                    steer("Right", intensity);
+                } else {
+                    steeringAngle = 0;
+                }
+            } else {
+                // Car is turning counterclockwise
+                // TODO: This is where more logic is needed
+                if (yellowInFrame) {
+                    intensity = (centerPoint.x / yellowCone.x);
+                    if (yellowCone.y == yellowConePrev.y) {
+                        // The car has not moved
+                        steeringAngle = 0;
+                    } else if (yellowCone.y < yellowConePrev.y) {
+                        // New cone targeted
+                    } else {
+                        // Current targeted cone moving closer
+                        steer("Left", intensity);
+                    }
+                }
+            }
+        // If none are in frame return 0
+        } else {
+            steeringAngle = 0;
+        }
     }
-
+    // Update prev cone pos's
+    blueConePrev = blueCone;
+    yellowConePrev = yellowCone;
     std::cout << steeringAngle
             << ";" << groundSteeringRequest
-            << ";" << abs(steeringAngle - groundSteeringRequest) 
+            << ";" << abs(cv::max(steeringAngle, groundSteeringRequest) - cv::min(steeringAngle, groundSteeringRequest)) 
             << std::endl;
     steeringAccuracy();
     return steeringAngle;
@@ -166,7 +215,7 @@ bool getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
             cv::Rect bBox = cv::boundingRect(blueContours[i]);
             // Add some restriction to rectangle size to avoid
             // duplicate 2x2 rectangles appearing on the same cone
-            if (bBox.area() > 30)
+            if (bBox.area() > 50)
             {
                 // Only draw a new rect at the closest (bottom-most) cone
                 if (bBox.y > prevBox.y)
@@ -184,6 +233,14 @@ bool getBlueCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
             }
         }
         blueCone = cv::Point(prevBox.x + prevBox.width / 2, prevBox.y + prevBox.height / 2);
+        if(!foundBlueConeOnce) {
+            foundBlueConeOnce = true;
+            blueConePrev = blueCone;
+            if (blueCone.x < centerPoint.x) {
+                blueOnLeft = true;
+                yellowOnLeft = false;
+            }
+        }
         return true;
     }
     return false;
@@ -221,6 +278,14 @@ bool getYellowCones(cv::Mat detectImage, cv::Mat drawImage, cv::Scalar color)
             }
         }
         yellowCone = cv::Point(prevBox.x + prevBox.width / 2, prevBox.y + prevBox.height / 2);
+        if(!foundYellowConeOnce) {
+            foundYellowConeOnce = true;
+            yellowConePrev = yellowCone;
+            if (yellowCone.x < centerPoint.x) {
+                blueOnLeft = false;
+                yellowOnLeft = true;
+            }
+        }
         return true;
     }
     return false;
@@ -270,7 +335,7 @@ int32_t main(int32_t argc, char **argv)
                 std::lock_guard<std::mutex> lck(gsrMutex);
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
                 // std::cout << "groundSteering = " << gsr.groundSteering() << std::endl;
-            };
+            }; 
 
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(), onGroundSteeringRequest);
 
@@ -283,17 +348,17 @@ int32_t main(int32_t argc, char **argv)
 
             // OpenCV data structure to hold an image.
             cv::Mat img, imgFrame, imgBlur, imgHSV, frameHSV, frameCropped, hsvDebug;
-            centerPoint = cv::Point(WIDTH / 2, HEIGHT - 1);
+            centerPoint = cv::Point(WIDTH / 2, roi.height);
 
             if (VERBOSE)
             {
-                cv::namedWindow("HSV Debugger");
-                cv::createTrackbar("Hue - low", "HSV Debugger", &hLow, 179);
-                cv::createTrackbar("Hue - high", "HSV Debugger", &hHigh, 179);
-                cv::createTrackbar("Sat - low", "HSV Debugger", &sLow, 255);
-                cv::createTrackbar("Sat - high", "HSV Debugger", &sHigh, 255);
-                cv::createTrackbar("Val - low", "HSV Debugger", &vLow, 255);
-                cv::createTrackbar("Val - high", "HSV Debugger", &vHigh, 255);
+                // cv::namedWindow("HSV Debugger");
+                // cv::createTrackbar("Hue - low", "HSV Debugger", &hLow, 179);
+                // cv::createTrackbar("Hue - high", "HSV Debugger", &hHigh, 179);
+                // cv::createTrackbar("Sat - low", "HSV Debugger", &sLow, 255);
+                // cv::createTrackbar("Sat - high", "HSV Debugger", &sHigh, 255);
+                // cv::createTrackbar("Val - low", "HSV Debugger", &vLow, 255);
+                // cv::createTrackbar("Val - high", "HSV Debugger", &vHigh, 255);
             }
 
             // Endless loop; end the program by pressing Ctrl-C.
@@ -384,6 +449,8 @@ int32_t main(int32_t argc, char **argv)
 
                 // Average correct values converted to string
                 std::string averageText = std::to_string(average);
+                std::string averageLeftText = std::to_string(avgLeft);
+                std::string averageRightText = std::to_string(avgRight);
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
@@ -396,23 +463,25 @@ int32_t main(int32_t argc, char **argv)
                 // Display image on your screen.
                 if (VERBOSE)
                 {
-                    hsvDebug = imgHSV.clone();
-                    cv::blur(hsvDebug, hsvDebug, cv::Size(7, 7));
-                    cv::cvtColor(hsvDebug, hsvDebug, cv::COLOR_BGR2HSV);
-                    cv::inRange(hsvDebug, cv::Scalar(hLow, sLow, vLow), cv::Scalar(hHigh, sHigh, vHigh), hsvDebug);
-                    hLow = cv::getTrackbarPos("Hue - low", "HSV Debugger");
-                    hHigh = cv::getTrackbarPos("Hue - high", "HSV Debugger");
-                    sLow = cv::getTrackbarPos("Sat - low", "HSV Debugger");
-                    sHigh = cv::getTrackbarPos("Sat - high", "HSV Debugger");
-                    vLow = cv::getTrackbarPos("Val - low", "HSV Debugger");
-                    vHigh = cv::getTrackbarPos("Val - high", "HSV Debugger");
+                    // hsvDebug = imgHSV.clone();
+                    // cv::blur(hsvDebug, hsvDebug, cv::Size(7, 7));
+                    // cv::cvtColor(hsvDebug, hsvDebug, cv::COLOR_BGR2HSV);
+                    // cv::inRange(hsvDebug, cv::Scalar(hLow, sLow, vLow), cv::Scalar(hHigh, sHigh, vHigh), hsvDebug);
+                    // hLow = cv::getTrackbarPos("Hue - low", "HSV Debugger");
+                    // hHigh = cv::getTrackbarPos("Hue - high", "HSV Debugger");
+                    // sLow = cv::getTrackbarPos("Sat - low", "HSV Debugger");
+                    // sHigh = cv::getTrackbarPos("Sat - high", "HSV Debugger");
+                    // vLow = cv::getTrackbarPos("Val - low", "HSV Debugger");
+                    // vHigh = cv::getTrackbarPos("Val - high", "HSV Debugger");
 
-                    cv::putText(img, date, cv::Point(25, 25), 5, 1, cv::Scalar(255, 255, 255), 1);
-                    cv::putText(img, "TS: " + timestamp, cv::Point(25, 45), 5, 1, cv::Scalar(255, 255, 255), 1);
-                    cv::putText(img, "Calculation Speed (ms): " + calcSpeed, cv::Point(25, 65), 5, 1, cv::Scalar(255, 255, 255), 1);
-                    cv::putText(img, "Average: " + averageText, cv::Point(25, 85), 5, 1, cv::Scalar(255, 255, 255), 1);
+                    cv::putText(img, date, cv::Point(25, 25), 5, 1, cv::Scalar(255, 255, 0), 1);
+                    cv::putText(img, "TS: " + timestamp, cv::Point(25, 45), 5, 1, cv::Scalar(255, 255, 0), 1);
+                    cv::putText(img, "Calculation Speed (ms): " + calcSpeed, cv::Point(25, 65), 5, 1, cv::Scalar(255, 255, 0), 1);
+                    cv::putText(img, "Average % " + averageText, cv::Point(25, 85), 5, 1, cv::Scalar(255, 255, 0), 1);
+                    cv::putText(img, "Left Turn % " + averageLeftText , cv::Point(25, 105), 5, 1, cv::Scalar(255, 255, 0), 1);
+                    cv::putText(img, "Right Turn % " + averageRightText, cv::Point(25, 125), 5, 1, cv::Scalar(255, 255, 0), 1);
                     cv::imshow(sharedMemory->name().c_str(), img);
-                    cv::imshow("Filter - Debug", hsvDebug);
+                    // cv::imshow("Filter - Debug", hsvDebug);
                     // cv::imshow("Image Crop - Debug", frameCropped);
                     cv::waitKey(1);
                 }
