@@ -193,10 +193,9 @@ double trackCones()
     // Update prev cone pos's
     blueConePrev = blueCone;
     yellowConePrev = yellowCone;
-    std::cout << steeringAngle
-            << ";" << groundSteeringRequest
-            << ";" << abs(cv::max(steeringAngle, groundSteeringRequest) - cv::min(steeringAngle, groundSteeringRequest)) 
-            << std::endl;
+    // std::cout << steeringAngle
+    //         << ";" << groundSteeringRequest
+    //         << std::endl;
     steeringAccuracy();
     return steeringAngle;
 }
@@ -352,13 +351,13 @@ int32_t main(int32_t argc, char **argv)
 
             if (VERBOSE)
             {
-                // cv::namedWindow("HSV Debugger");
-                // cv::createTrackbar("Hue - low", "HSV Debugger", &hLow, 179);
-                // cv::createTrackbar("Hue - high", "HSV Debugger", &hHigh, 179);
-                // cv::createTrackbar("Sat - low", "HSV Debugger", &sLow, 255);
-                // cv::createTrackbar("Sat - high", "HSV Debugger", &sHigh, 255);
-                // cv::createTrackbar("Val - low", "HSV Debugger", &vLow, 255);
-                // cv::createTrackbar("Val - high", "HSV Debugger", &vHigh, 255);
+                cv::namedWindow("HSV Debugger");
+                cv::createTrackbar("Hue - low", "HSV Debugger", &hLow, 179);
+                cv::createTrackbar("Hue - high", "HSV Debugger", &hHigh, 179);
+                cv::createTrackbar("Sat - low", "HSV Debugger", &sLow, 255);
+                cv::createTrackbar("Sat - high", "HSV Debugger", &sHigh, 255);
+                cv::createTrackbar("Val - low", "HSV Debugger", &vLow, 255);
+                cv::createTrackbar("Val - high", "HSV Debugger", &vHigh, 255);
             }
 
             // Endless loop; end the program by pressing Ctrl-C.
@@ -382,6 +381,7 @@ int32_t main(int32_t argc, char **argv)
                 // TODO: Here, you can add some code to check the sampleTimePoint when the current frame was captured.
                 std::pair<bool, cluon::data::TimeStamp> timestampFromImage = sharedMemory->getTimeStamp();
                 std::string timestamp = std::to_string(cluon::time::toMicroseconds(timestampFromImage.second));
+                std::cout << "Group 1;" << timestamp << ";" << steeringAngle << std::endl; 
                 sharedMemory->unlock();
 
                 cluon::data::TimeStamp ts = cluon::time::now();
@@ -463,16 +463,16 @@ int32_t main(int32_t argc, char **argv)
                 // Display image on your screen.
                 if (VERBOSE)
                 {
-                    // hsvDebug = imgHSV.clone();
-                    // cv::blur(hsvDebug, hsvDebug, cv::Size(7, 7));
-                    // cv::cvtColor(hsvDebug, hsvDebug, cv::COLOR_BGR2HSV);
-                    // cv::inRange(hsvDebug, cv::Scalar(hLow, sLow, vLow), cv::Scalar(hHigh, sHigh, vHigh), hsvDebug);
-                    // hLow = cv::getTrackbarPos("Hue - low", "HSV Debugger");
-                    // hHigh = cv::getTrackbarPos("Hue - high", "HSV Debugger");
-                    // sLow = cv::getTrackbarPos("Sat - low", "HSV Debugger");
-                    // sHigh = cv::getTrackbarPos("Sat - high", "HSV Debugger");
-                    // vLow = cv::getTrackbarPos("Val - low", "HSV Debugger");
-                    // vHigh = cv::getTrackbarPos("Val - high", "HSV Debugger");
+                    hsvDebug = imgHSV.clone();
+                    cv::blur(hsvDebug, hsvDebug, cv::Size(7, 7));
+                    cv::cvtColor(hsvDebug, hsvDebug, cv::COLOR_BGR2HSV);
+                    cv::inRange(hsvDebug, cv::Scalar(hLow, sLow, vLow), cv::Scalar(hHigh, sHigh, vHigh), hsvDebug);
+                    hLow = cv::getTrackbarPos("Hue - low", "HSV Debugger");
+                    hHigh = cv::getTrackbarPos("Hue - high", "HSV Debugger");
+                    sLow = cv::getTrackbarPos("Sat - low", "HSV Debugger");
+                    sHigh = cv::getTrackbarPos("Sat - high", "HSV Debugger");
+                    vLow = cv::getTrackbarPos("Val - low", "HSV Debugger");
+                    vHigh = cv::getTrackbarPos("Val - high", "HSV Debugger");
 
                     cv::putText(img, date, cv::Point(25, 25), 5, 1, cv::Scalar(255, 255, 0), 1);
                     cv::putText(img, "TS: " + timestamp, cv::Point(25, 45), 5, 1, cv::Scalar(255, 255, 0), 1);
@@ -481,7 +481,7 @@ int32_t main(int32_t argc, char **argv)
                     cv::putText(img, "Left Turn % " + averageLeftText , cv::Point(25, 105), 5, 1, cv::Scalar(255, 255, 0), 1);
                     cv::putText(img, "Right Turn % " + averageRightText, cv::Point(25, 125), 5, 1, cv::Scalar(255, 255, 0), 1);
                     cv::imshow(sharedMemory->name().c_str(), img);
-                    // cv::imshow("Filter - Debug", hsvDebug);
+                    cv::imshow("Filter - Debug", hsvDebug);
                     // cv::imshow("Image Crop - Debug", frameCropped);
                     cv::waitKey(1);
                 }

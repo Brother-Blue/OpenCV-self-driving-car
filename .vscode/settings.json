@@ -53,6 +53,11 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "thread": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "random": "cpp",
+        "bit": "cpp",
+        "numeric": "cpp",
+        "shared_mutex": "cpp",
+        "cinttypes": "cpp"
     }
 }
